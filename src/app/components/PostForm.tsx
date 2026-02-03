@@ -4,6 +4,7 @@ import { useState } from "react";
 import { uploadImage } from "../lib/storage";
 import { createPost } from "../lib/data";
 import { logger } from "../lib/logger";
+import { resizeImage } from "../lib/imageUtils";
 
 interface PostFormProps {
     lat: number;
@@ -17,12 +18,31 @@ const PostForm = ({ lat, lng }: PostFormProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showLogButton, setShowLogButton] = useState(false);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     // ファイル選択の変更ハンドラ
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            logger.log(`File selected: ${e.target.files[0].name}`);
-            setImageFile(e.target.files[0]);
+            const originalFile = e.target.files[0];
+            logger.log(`File selected: ${originalFile.name} (${originalFile.size} bytes)`);
+
+            try {
+                // 画像をリサイズする
+                const resizedFile = await resizeImage(originalFile, 1024, 1024);
+                logger.log(`File resized: ${resizedFile.size} bytes`);
+
+                setImageFile(resizedFile);
+
+                // プレビュー表示用のURLを作成
+                const url = URL.createObjectURL(resizedFile);
+                setPreviewUrl(url);
+            } catch (error) {
+                logger.error("Image resizing failed", error);
+                // リサイズに失敗した場合は元のファイルを使用する（またはエラーを表示）
+                setImageFile(originalFile);
+                const url = URL.createObjectURL(originalFile);
+                setPreviewUrl(url);
+            }
         }
     };
 
@@ -50,6 +70,7 @@ const PostForm = ({ lat, lng }: PostFormProps) => {
             setComment("");
             setPassword("");
             setImageFile(null);
+            setPreviewUrl(null);
 
             // 投稿後に画面をリロードするか、親コンポーネントで投稿リストを更新するのが望ましい
             window.location.reload();
@@ -94,11 +115,25 @@ const PostForm = ({ lat, lng }: PostFormProps) => {
                     <input
                         type="file"
                         accept="image/*"
+                        capture="environment"
                         onChange={handleFileChange}
                         disabled={isSubmitting}
                         className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer disabled:opacity-50"
                     />
                 </div>
+
+                {previewUrl && (
+                    <div className="mt-2 relative rounded-lg overflow-hidden border border-gray-100 bg-gray-50 aspect-video flex items-center justify-center">
+                        <img
+                            src={previewUrl}
+                            alt="Preview"
+                            className="max-h-full max-w-full object-contain"
+                        />
+                        <div className="absolute top-1 right-1 bg-black/50 text-white text-[10px] px-2 py-1 rounded-full backdrop-blur-sm">
+                            プレビュー
+                        </div>
+                    </div>
+                )}
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
