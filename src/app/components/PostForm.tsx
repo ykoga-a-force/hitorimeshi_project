@@ -115,7 +115,6 @@ const PostForm = ({ lat, lng }: PostFormProps) => {
                     <input
                         type="file"
                         accept="image/*"
-                        capture="environment"
                         onChange={handleFileChange}
                         disabled={isSubmitting}
                         className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100 cursor-pointer disabled:opacity-50"
