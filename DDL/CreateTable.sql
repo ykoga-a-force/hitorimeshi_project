@@ -1,24 +1,4 @@
--- publicスキーマに posts テーブルを作成します
-CREATE TABLE public.posts (
-    -- id: 重複しないID。UUID形式で自動的に作られます（プライマリキー）
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    
-    -- lat: 緯度（小数点付きの数字）
-    lat FLOAT8 NOT NULL,
-    
-    -- lng: 経度（小数点付きの数字）
-    lng FLOAT8 NOT NULL,
-    
-    -- image_url: 写真が保存されている場所のURL（長い文字）
-    image_url TEXT NOT NULL,
-    
-    -- comment: ひとことメモ（最大40文字まで）
-    comment VARCHAR(40),
-    
-    -- created_at: 投稿された日時（何も入力しないと、その時の時間が自動で入ります）
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
-
+c
 
 
 
@@ -40,3 +20,18 @@ alter table public.posts enable row level security;
 create policy "誰でも投稿・閲覧OK" on public.posts for all using (true) with check (true);
 
 
+
+
+最新のDDL
+削除用パスワードと桁数
+
+create table public.posts (
+  id uuid not null default gen_random_uuid(),
+  lat float8 not null,
+  lng float8 not null,
+  image_url text,
+  comment varchar(40),
+  created_at timestamptz not null default now(),
+  delete_password varchar(8), -- ここをきっちり8文字にしたっぴ！
+  primary key (id)
+);
