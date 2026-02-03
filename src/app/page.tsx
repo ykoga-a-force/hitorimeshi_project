@@ -5,6 +5,7 @@ import { useGeolocation } from "./hooks/useGeolocation";
 import { useState, useEffect } from "react";
 import { getNearbyPosts, Post } from "./lib/data";
 import PostForm from "./components/PostForm";
+import Header from "./components/Header";
 
 // Leafletはブラウザでのみ動作するため、SSRを無効にして読み込みます
 const MapComponent = dynamic(() => import("./components/MapComponent"), {
@@ -51,9 +52,13 @@ export default function Home() {
 
   return (
     <main className="h-screen w-full relative">
+      <Header />
       {isLoadingPosts && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm pointer-events-none">
-          <span className="text-sm font-medium">近くの投稿を読み込み中...</span>
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[1000] bg-white/90 px-4 py-2 rounded-full shadow-md backdrop-blur-sm pointer-events-none border border-orange-50 animate-pulse">
+          <span className="text-sm font-medium text-orange-600 flex items-center gap-2">
+            <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+            近くの投稿を読み込み中...
+          </span>
         </div>
       )}
       {location && (
