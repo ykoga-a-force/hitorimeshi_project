@@ -62,6 +62,7 @@ const ZoomHandler = ({ onZoomChange }: { onZoomChange: (zoom: number) => void })
 
 const MapComponent = ({ center, zoom, posts }: MapComponentProps) => {
     const [currentZoom, setCurrentZoom] = useState(zoom);
+    const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
     const [userIcon, setUserIcon] = useState<L.Icon | L.DivIcon>(defaultIcon);
     const [foodIcon, setFoodIcon] = useState<L.Icon | L.DivIcon>(defaultIcon);
     const [hasUserIcon, setHasUserIcon] = useState(false);
@@ -186,7 +187,8 @@ const MapComponent = ({ center, zoom, posts }: MapComponentProps) => {
                                     <img
                                         src={post.image_url}
                                         alt="投稿写真"
-                                        className="w-full max-w-[150px] h-auto rounded-md mb-2 shadow-sm"
+                                        className="w-full max-w-[150px] h-auto rounded-md mb-2 shadow-sm cursor-zoom-in active:scale-95 transition-transform"
+                                        onClick={() => setSelectedImageUrl(post.image_url)}
                                     />
                                 )}
                                 <p className="text-sm font-medium">{post.comment}</p>
@@ -210,6 +212,31 @@ const MapComponent = ({ center, zoom, posts }: MapComponentProps) => {
                     </Marker>
                 ))}
             </MarkerClusterGroup>
+
+            {/* 画像拡大表示用モーダル */}
+            {selectedImageUrl && (
+                <div
+                    className="fixed inset-0 z-[3000] bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+                    onClick={() => setSelectedImageUrl(null)}
+                >
+                    <div className="relative max-w-4xl w-full h-full flex items-center justify-center">
+                        <img
+                            src={selectedImageUrl}
+                            alt="拡大写真"
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300"
+                        />
+                        <button
+                            className="absolute top-4 right-4 text-white text-4xl font-light hover:text-gray-300 transition-colors bg-black/20 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md"
+                            onClick={() => setSelectedImageUrl(null)}
+                        >
+                            ×
+                        </button>
+                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/40 px-4 py-2 rounded-full backdrop-blur-sm">
+                            画面をタップして閉じる
+                        </div>
+                    </div>
+                </div>
+            )}
         </MapContainer>
     );
 };

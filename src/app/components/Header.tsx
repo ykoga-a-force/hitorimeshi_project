@@ -7,10 +7,10 @@ const Header = () => {
 
     return (
         <>
-            <header className="fixed top-0 left-0 right-0 z-[1001] bg-white/80 backdrop-blur-md border-b border-gray-100 px-6 py-3 flex justify-between items-center shadow-sm">
+            <header className="fixed top-0 left-0 right-0 z-[5000] bg-white/90 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex justify-between items-center shadow-sm">
                 <div className="flex items-center gap-2">
                     <span className="text-2xl">🍚</span>
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text text-transparent">
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-orange-400 bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] text-transparent">
                         ひとりめし
                     </h1>
                 </div>
