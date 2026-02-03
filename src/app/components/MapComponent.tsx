@@ -4,6 +4,9 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaf
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, useState, useCallback } from "react";
+import MarkerClusterGroup from "react-leaflet-cluster";
+
+// クラスター用のスタイルは layout.tsx に移動しました。
 
 // Leafletのデフォルトアイコンのパス修正（Next.jsで必要）
 const fixLeafletIcon = () => {
@@ -16,7 +19,7 @@ const fixLeafletIcon = () => {
     });
 };
 
-import { Post } from "../lib/data";
+import { Post, deletePost } from "../lib/data";
 
 interface MapComponentProps {
     center: [number, number];
@@ -63,6 +66,39 @@ const MapComponent = ({ center, zoom, posts }: MapComponentProps) => {
     const [foodIcon, setFoodIcon] = useState<L.Icon | L.DivIcon>(defaultIcon);
     const [hasUserIcon, setHasUserIcon] = useState(false);
     const [hasFoodIcon, setHasFoodIcon] = useState(false);
+
+    // クラスター用のカスタムアイコン作成関数
+    const createClusterCustomIcon = useCallback((cluster: any) => {
+        const count = cluster.getChildCount();
+        const size = calculateIconSize(currentZoom);
+
+        // 投稿ピン画像をベースに、右上に件数バッジを重ねる
+        return L.divIcon({
+            html: `
+                <div class="cluster-pin-container" style="width: ${size}px; height: ${size}px;">
+                    <img src="/images/food-pin.png" class="cluster-pin-img" alt="cluster" />
+                    <div class="cluster-badge">${count}</div>
+                </div>
+            `,
+            className: "custom-cluster-icon",
+            iconSize: L.point(size, size),
+            iconAnchor: L.point(size / 2, size),
+        });
+    }, [currentZoom]);
+
+    // 削除処理のハンドラ
+    const handleDelete = async (postId: string) => {
+        const password = window.prompt("削除パスワードを入力してください。");
+        if (password === null) return; // キャンセル
+
+        try {
+            await deletePost(postId, password);
+            alert("削除に成功しました！");
+            window.location.reload();
+        } catch (error: any) {
+            alert(error.message || "削除に失敗しました...");
+        }
+    };
 
     useEffect(() => {
         fixLeafletIcon();
@@ -122,36 +158,58 @@ const MapComponent = ({ center, zoom, posts }: MapComponentProps) => {
             <ZoomHandler onZoomChange={setCurrentZoom} />
 
             {/* ユーザーの現在地マーカー */}
-            <Marker position={center} icon={userIcon}>
+            <Marker position={center} icon={userIcon} zIndexOffset={-1000}>
                 <Popup>
                     あなたの現在地
                 </Popup>
             </Marker>
 
-            {/* 投稿データのマーカー */}
-            {posts.map((post) => (
-                <Marker
-                    key={post.id}
-                    position={[post.lat, post.lng]}
-                    icon={foodIcon}
-                >
-                    <Popup>
-                        <div className="flex flex-col items-center min-w-[150px]">
-                            {post.image_url && (
-                                <img
-                                    src={post.image_url}
-                                    alt="投稿写真"
-                                    className="w-full max-w-[150px] h-auto rounded-md mb-2 shadow-sm"
-                                />
-                            )}
-                            <p className="text-sm font-medium">{post.comment}</p>
-                            <p className="text-[10px] text-gray-500 mt-1">
-                                {new Date(post.created_at).toLocaleString('ja-JP')}
-                            </p>
-                        </div>
-                    </Popup>
-                </Marker>
-            ))}
+            {/* 投稿データのマーカー（クラスター化） */}
+            <MarkerClusterGroup
+                chunkedLoading
+                spiderfyOnMaxZoom={true}
+                showCoverageOnHover={false}
+                zoomToBoundsOnClick={true}
+                spiderfyDistanceMultiplier={2}
+                iconCreateFunction={createClusterCustomIcon}
+            >
+                {posts.map((post) => (
+                    <Marker
+                        key={post.id}
+                        position={[post.lat, post.lng]}
+                        icon={foodIcon}
+                        zIndexOffset={100} // 投稿ピンを前面に表示
+                    >
+                        <Popup>
+                            <div className="flex flex-col items-center min-w-[150px]">
+                                {post.image_url && (
+                                    <img
+                                        src={post.image_url}
+                                        alt="投稿写真"
+                                        className="w-full max-w-[150px] h-auto rounded-md mb-2 shadow-sm"
+                                    />
+                                )}
+                                <p className="text-sm font-medium">{post.comment}</p>
+                                <div className="flex justify-between items-center w-full mt-2 pt-2 border-t border-gray-100">
+                                    <span className="text-[10px] text-gray-500">
+                                        {new Date(post.created_at).toLocaleString('ja-JP', {
+                                            hour: '2-digit', minute: '2-digit'
+                                        })}
+                                    </span>
+                                    {post.delete_password && (
+                                        <button
+                                            onClick={() => handleDelete(post.id)}
+                                            className="text-[10px] text-red-500 hover:text-red-700 font-bold underline"
+                                        >
+                                            削除する
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+            </MarkerClusterGroup>
         </MapContainer>
     );
 };

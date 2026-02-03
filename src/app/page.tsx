@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useGeolocation } from "./hooks/useGeolocation";
 import { useState, useEffect } from "react";
 import { getNearbyPosts, Post } from "./lib/data";
+import PostForm from "./components/PostForm";
 
 // Leafletはブラウザでのみ動作するため、SSRを無効にして読み込みます
 const MapComponent = dynamic(() => import("./components/MapComponent"), {
@@ -56,11 +57,14 @@ export default function Home() {
         </div>
       )}
       {location && (
-        <MapComponent
-          center={[location.lat, location.lng]}
-          zoom={16}
-          posts={posts}
-        />
+        <>
+          <MapComponent
+            center={[location.lat, location.lng]}
+            zoom={16}
+            posts={posts}
+          />
+          <PostForm lat={location.lat} lng={location.lng} />
+        </>
       )}
     </main>
   );

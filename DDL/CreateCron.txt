@@ -1,0 +1,19 @@
+supabaseに設定したcron
+
+
+-- 毎日午前3時（JST）に、4時間以上前の投稿を削除する設定だっぴ！
+SELECT cron.schedule(
+  'delete-old-posts',   -- ジョブの名前（お掃除屋さんの名前だっぴ）
+  '0 18 * * *',         -- 日本時間 03:00（UTC 18:00）に実行するっぴ
+  $$ DELETE FROM posts WHERE created_at < now() - interval '4 hours' $$
+);
+
+
+
+画像削除
+データ削除とはタイミングが異なる
+
+-- ストレージの画像も4時間（240分）で自動削除するルールを作るっぴ！
+-- ※'your_bucket_name' の部分は、実際のバケット名（例: 'photos' など）に書き換えてね！
+insert into storage.objects_lifecycle (bucket_id, name_prefix, expire_after_days)
+values ('post_images', '', 1);
